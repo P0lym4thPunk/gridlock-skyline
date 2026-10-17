@@ -1,13 +1,64 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gridlock-skyline</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GRIDLOCK: SKYLINE</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Landing Page Overlay -->
+    <div id="landing-screen" class="overlay">
+        <div class="content">
+            <h1 class="title">GRIDLOCK: SKYLINE</h1>
+            <p class="lore">Ground transit collapsed. Airborne traffic is in total ruin. Dodge rogue hover-craft and navigate high-altitude chaos using precision thruster maneuvers.</p>
+            <div class="high-score-container">
+                <span class="label">SYSTEM RECORD:</span>
+                <span id="high-score">0</span>
+            </div>
+            <button id="start-btn" class="action-btn">TAP TO LAUNCH</button>
+        </div>
+    </div>
+
+    <!-- Game HUD Overlay -->
+    <div id="hud-overlay" class="overlay hidden">
+        <div class="hud-top-left">
+            <div class="stat-box">
+                <span class="stat-label">VELOCITY</span>
+                <span id="speed-readout">0 <small>MAX</small></span>
+            </div>
+        </div>
+        <div class="hud-top-right">
+            <div class="stat-box">
+                <span class="stat-label">DISTANCE</span>
+                <span id="score-counter">0m</span>
+            </div>
+        </div>
+        <div class="hud-bottom-center">
+            <div class="control-guide">
+                <span class="guide-item">WASD / ARROWS</span>
+                <span class="guide-item">TOUCH DRAG</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="overlay hidden">
+        <div class="content">
+            <h2 class="game-over-title">CRITICAL FAILURE</h2>
+            <div class="final-stats">
+                <div class="stat-row">
+                    <span class="label">FINAL DISTANCE:</span>
+                    <span id="final-score">0m</span>
+                </div>
+                <div id="new-high-score-banner" class="banner hidden">NEW SYSTEM RECORD!</div>
+            </div>
+            <button id="retry-btn" class="action-btn">RETRY</button>
+        </div>
+    </div>
+
+    <script type="module" src="/main.js"></script>
+</body>
 </html>

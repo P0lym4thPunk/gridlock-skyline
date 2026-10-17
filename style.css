@@ -1,0 +1,234 @@
+:root {
+    --color-bg: #000000;
+    --color-neon-cyan: #00f3ff;
+    --color-neon-crimson: #ff003c;
+    --color-text: #ffffff;
+    --color-text-dim: rgba(255, 255, 255, 0.6);
+    --font-main: 'Courier New', Courier, monospace;
+    --transition-speed: 0.3s;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-main);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+#game-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: none;
+    z-index: 0;
+}
+
+/* Overlay Base */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: opacity var(--transition-speed) ease;
+    background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%);
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.content {
+    text-align: center;
+    max-width: 600px;
+    padding: 2rem;
+}
+
+/* Typography */
+.title {
+    font-size: 4rem;
+    font-weight: 900;
+    letter-spacing: -2px;
+    color: var(--color-neon-cyan);
+    text-shadow: 0 0 20px var(--color-neon-cyan);
+    margin-bottom: 1.5rem;
+    font-style: italic;
+}
+
+.lore {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--color-text-dim);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+}
+
+.game-over-title {
+    font-size: 3rem;
+    color: var(--color-neon-crimson);
+    text-shadow: 0 0 20px var(--color-neon-crimson);
+    margin-bottom: 2rem;
+}
+
+/* UI Components */
+.high-score-container {
+    margin-bottom: 2rem;
+    font-size: 1.2rem;
+    color: var(--color-text);
+}
+
+.high-score-container .label {
+    color: var(--color-text-dim);
+    margin-right: 0.5rem;
+}
+
+.action-btn {
+    background: transparent;
+    border: 2px solid var(--color-neon-cyan);
+    color: var(--color-neon-cyan);
+    padding: 1rem 2.5rem;
+    font-family: var(--font-main);
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    text-transform: uppercase;
+}
+
+.action-btn:hover {
+    background: var(--color-neon-cyan);
+    color: var(--color-bg);
+    box-shadow: 0 0 30px var(--color-neon-cyan);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+/* HUD Elements */
+#hud-overlay {
+    pointer-events: none;
+    background: transparent;
+}
+
+.hud-top-left, .hud-top-right {
+    position: absolute;
+    top: 20px;
+    padding: 0 20px;
+}
+
+.hud-top-left { left: 0; }
+.hud-top-right { right: 0; text-align: right; }
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    border-left: 4px solid var(--color-neon-cyan);
+    padding-left: 10px;
+}
+
+.hud-top-right .stat-box {
+    border-left: 0;
+    border-right: 4px solid var(--color-neon-cyan);
+    padding-right: 10px;
+    text-align: right;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--color-text-dim);
+    letter-spacing: 2px;
+}
+
+#speed-readout, #score-counter {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+#speed-readout small {
+    font-size: 0.8rem;
+    color: var(--color-neon-cyan);
+    margin-left: 4px;
+}
+
+.hud-bottom-center {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.control-guide {
+    display: flex;
+    gap: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.guide-item {
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+}
+
+/* Game Over Stats */
+.final-stats {
+    margin-bottom: 3rem;
+}
+
+.stat-row {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-row .label {
+    color: var(--color-text-dim);
+    margin-right: 10px;
+}
+
+.banner {
+    color: var(--color-neon-cyan);
+    font-weight: bold;
+    animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+    from { opacity: 1; }
+    to { opacity: 0.4; }
+}
+
+/* Mobile Optimization */
+@media (max-width: 600px) {
+    .title {
+        font-size: 2.5rem;
+    }
+    .lore {
+        font-size: 0.9rem;
+    }
+    #speed-readout, #score-counter {
+        font-size: 1.4rem;
+    }
+}
