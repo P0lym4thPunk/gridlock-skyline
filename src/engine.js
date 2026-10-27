@@ -28,11 +28,11 @@ export class Engine {
 
     _initScene() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x000000);
+        // High-Noon atmosphere: Warm ivory/pale golden sky
+        this.scene.background = new THREE.Color(0xfffaf0);
 
-        // Atmospheric dark fog for depth and cyberpunk vibe
-        // FogExp2 creates a more natural exponential decay
-        this.scene.fog = new THREE.FogExp2(0x000000, 0.02);
+        // Golden-white atmospheric haze
+        this.scene.fog = new THREE.FogExp2(0xfff4d0, 0.015);
     }
 
     _initCamera() {
@@ -64,7 +64,7 @@ export class Engine {
         this.scene.add(ambientLight);
 
         // Directional sun light for high-contrast shadows
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+        const sunLight = new THREE.DirectionalLight(0xffdf00, 1);
         sunLight.position.set(5, 10, 7.5);
         this.scene.add(sunLight);
 
@@ -112,6 +112,10 @@ export class Engine {
 
         const deltaTime = this.clock.getDelta();
         const elapsed = this.clock.getElapsedTime();
+
+        if (import.meta.env.DEV && window.__GRIDLOCK_DEBUG__) {
+            window.__GRIDLOCK_DEBUG__.frameCount++;
+        }
 
         if (this.updateCallback) {
             this.updateCallback(deltaTime, elapsed);

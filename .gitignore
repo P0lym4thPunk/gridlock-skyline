@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies and build output
 node_modules
 dist
 dist-ssr
@@ -22,3 +23,57 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ------------------------------------------------------------
+# PRIVATE AI / AGENTIC DEVELOPMENT WORKFLOW
+# Local instructions and internal development notes.
+# Keep these files available locally, but out of Git commits.
+# ------------------------------------------------------------
+
+# Root-level agent instructions
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md
+/CURSOR.md
+/CODEX.md
+/.cursorrules
+/.aider*
+/.clinerules*
+/.windsurfrules
+
+# Dedicated private workflow directories
+/.gridlock-agent/
+/.ai-workflow/
+/.ai/
+/.prompts/
+
+# AI tool configuration directories
+/.claude/
+/.gemini/
+/.cursor/
+/.codex/
+/.continue/
+/.cline/
+/.windsurf/
+
+# Private planning and session documents
+/AI_WORKFLOW.md
+/AGENT_PLAN.md
+/AGENT_NOTES.md
+/IMPLEMENTATION_PLAN.md
+/SESSION_HANDOFF.md
+/WORKLOG_AI.md
+
+# Generated local agent reports
+/agent-report*.md
+/agent-audit*.md
+/agent-session*.md
+*.agent.local.md
+*.prompt.local.md
+# Local Playwright testing artifacts
+/.playwright-cli/
+/.playwright-mcp/
+
+# Local gameplay screenshots
+/gameplay_initial.png
+/landing_screen.png

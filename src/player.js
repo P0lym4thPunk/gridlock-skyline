@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { GAME_CONFIG } from './main.js';
 
 /**
  * Player handles the 3D model and physics logic for the hover car.
@@ -8,13 +9,14 @@ export class Player {
         this.scene = scene;
 
         // Physics Constants
-        this.speed = 15;
-        this.lerpFactor = 5;
+        this.moveSpeed = GAME_CONFIG.PLAYER.MOVE_SPEED;
+        this.lerpFactor = GAME_CONFIG.PLAYER.LERP_FACTOR;
         this.bounds = { width: 0.6, height: 0.3, depth: 1.2 };
 
         // State
         this.position = new THREE.Vector3(0, 0, 0);
         this.targetPosition = new THREE.Vector3(0, 0, 0);
+        this.currentLaneIndex = 1; // Middle lane (0: Left, 1: Middle, 2: Right)
         this.rotationZ = 0;
         this.targetRotationZ = 0;
 
@@ -77,15 +79,25 @@ export class Player {
      * @param {Object} input - { left, right, up, down, rollLeft, rollRight }
      */
     update(deltaTime, input) {
-        // 1. Handle Movement Input
-        if (input.left) this.targetPosition.x -= this.speed * deltaTime;
-        if (input.right) this.targetPosition.x += this.speed * deltaTime;
-        if (input.up) this.targetPosition.y += this.speed * deltaTime;
-        if (input.down) this.targetPosition.y -= this.speed * deltaTime;
+        // 1. Handle Lane-Based Movement Input
+        if (input.left && this.currentLaneIndex > 0) {
+            this.currentLaneIndex--;
+            input.left = false; // Consume input for discrete step
+        }
+        if (input.right && this.currentLaneIndex < GAME_CONFIG.LANES.COUNT - 1) {
+            this.currentLaneIndex++;
+            input.right = false; // Consume input for discrete step
+        }
 
-        // Constrain movement to game bounds
-        this.targetPosition.x = THREE.MathUtils.clamp(this.targetPosition.x, -5, 5);
-        this.targetPosition.y = THREE.MathUtils.clamp(this.targetPosition.y, -3, 3);
+        // Set target X based on current lane
+        this.targetPosition.x = GAME_CONFIG.LANES.POSITIONS[this.currentLaneIndex];
+
+        // Handle Y movement (Up/Down)
+        if (input.up) this.targetPosition.y += this.moveSpeed * deltaTime;
+        if (input.down) this.targetPosition.y -= this.moveSpeed * deltaTime;
+
+        // Clamp Y to prevent flying off road or diving underground
+        this.targetPosition.y = Math.max(0.3, Math.min(5, this.targetPosition.y));
 
         // Smooth Lerp to target position
         this.position.lerp(this.targetPosition, this.lerpFactor * deltaTime);
@@ -139,6 +151,7 @@ export class Player {
     reset() {
         this.position.set(0, 0, 0);
         this.targetPosition.set(0, 0, 0);
+        this.currentLaneIndex = 1;
         this.rotationZ = 0;
         this.isRolling = false;
         this.invulnerable = false;
