@@ -100,27 +100,120 @@ export class Environment {
     _initCityscape() {
         this.buildings = new THREE.Group();
         const buildingCount = 80;
-        const chromeMat = new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            shininess: 100,
-            specular: 0xffeaad
-        });
+
+        // 1. Create shared window texture
+        const windowTexture = this._createWindowTexture();
+
+        // 2. Create a pool of materials for different size classes to avoid stretching
+        // We use a few common scales to keep material count low
+        const materialPool = {};
+        const getMaterial = (w, h) => {
+            const scaleKey = `${Math.round(w)}x${Math.round(h)}`;
+            if (!materialPool[scaleKey]) {
+                const tex = windowTexture.clone();
+                tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                // Scale windows: approx 1 window every 2 units
+                tex.repeat.set(w / 2, h / 2);
+
+                materialPool[scaleKey] = new THREE.MeshPhongMaterial({
+                    color: 0x111115,
+                    emissive: 0x00f3ff,
+                    emissiveMap: tex,
+                    emissiveIntensity: 0.6,
+                    shininess: 100,
+                    specular: 0x444444
+                });
+            }
+            return materialPool[scaleKey];
+        };
 
         for (let i = 0; i < buildingCount; i++) {
-            const w = 4 + Math.random() * 6;
-            const h = 20 + Math.random() * 60;
-            const d = 4 + Math.random() * 6;
-            const geom = new THREE.BoxGeometry(w, h, d);
-            const b = new THREE.Mesh(geom, chromeMat);
+            const type = Math.random();
+            let buildingGroup = new THREE.Group();
+            
+            if (type < 0.4) {
+                // Type A: Slab (Wide, shorter)
+                const w = 8 + Math.random() * 6;
+                const h = 20 + Math.random() * 20;
+                const d = 8 + Math.random() * 6;
+                const geom = new THREE.BoxGeometry(w, h, d);
+                const b = new THREE.Mesh(geom, getMaterial(w, h));
+                b.position.y = h / 2;
+                buildingGroup.add(b);
+            } else if (type < 0.8) {
+                // Type B: Tower (Narrow, very tall)
+                const w = 4 + Math.random() * 4;
+                const h = 50 + Math.random() * 50;
+                const d = 4 + Math.random() * 4;
+                const geom = new THREE.BoxGeometry(w, h, d);
+                const b = new THREE.Mesh(geom, getMaterial(w, h));
+                b.position.y = h / 2;
+                buildingGroup.add(b);
+            } else {
+                // Type C: Stepped (Tiered)
+                const baseW = 8 + Math.random() * 4;
+                const baseH = 20 + Math.random() * 20;
+                const baseD = 8 + Math.random() * 4;
+                
+                // Base tier
+                const geom1 = new THREE.BoxGeometry(baseW, baseH, baseD);
+                const b1 = new THREE.Mesh(geom1, getMaterial(baseW, baseH));
+                b1.position.y = baseH / 2;
+                buildingGroup.add(b1);
+
+                // Top tier
+                const topW = baseW * 0.6;
+                const topH = 10 + Math.random() * 20;
+                const topD = baseD * 0.6;
+                const geom2 = new THREE.BoxGeometry(topW, topH, topD);
+                const b2 = new THREE.Mesh(geom2, getMaterial(topW, topH));
+                b2.position.y = baseH + topH / 2;
+                buildingGroup.add(b2);
+            }
+
             const side = Math.random() > 0.5 ? 1 : -1;
-            b.position.set(
+            buildingGroup.position.set(
                 (15 + Math.random() * 20) * side,
-                h / 2,
+                0,
                 -Math.random() * 400
             );
-            this.buildings.add(b);
+            this.buildings.add(buildingGroup);
         }
         this.scene.add(this.buildings);
+    }
+
+    _createWindowTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+
+        // Dark background
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 64, 64);
+
+        // Draw a 4x4 grid of glowing windows
+        const winSize = 8;
+        const spacing = 16;
+        
+        for (let x = 0; x < 4; x++) {
+            for (let y = 0; y < 4; y++) {
+                // Randomly choose between cyan and gold for "Cyber-Gilded" look
+                ctx.fillStyle = Math.random() > 0.3 ? '#00f3ff' : '#ffd866';
+                // Randomly skip some windows for variety
+                if (Math.random() > 0.2) {
+                    ctx.fillRect(
+                        x * spacing + 4, 
+                        y * spacing + 4, 
+                        winSize, 
+                        winSize
+                    );
+                }
+            }
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
     }
 
     _createBridge(zPos) {

@@ -100,7 +100,8 @@ export class Player {
         this.targetPosition.y = Math.max(0.3, Math.min(5, this.targetPosition.y));
 
         // Smooth Lerp to target position
-        this.position.lerp(this.targetPosition, this.lerpFactor * deltaTime);
+        const alpha = Math.max(0, Math.min(1, this.lerpFactor * deltaTime));
+        this.position.lerp(this.targetPosition, alpha);
         this.mesh.position.copy(this.position);
 
         // 2. Handle Complex Maneuver: Barrel Roll
