@@ -32,28 +32,30 @@ export class Player {
     _createModel() {
         this.mesh = new THREE.Group();
 
-        // Main Body - Sleek low-poly Cyber-EV
+        // Main Body - Whitish-silver metallic futuristic finish
         const bodyGeom = new THREE.BoxGeometry(0.6, 0.3, 1.2);
-        const bodyMat = new THREE.MeshPhongMaterial({
-            color: 0x222222,
-            shininess: 100,
-            specular: 0x00f3ff
+        const bodyMat = new THREE.MeshStandardMaterial({
+            color: 0xdddddd, // Whitish-silver
+            metalness: 0.9,
+            roughness: 0.2
         });
         const body = new THREE.Mesh(bodyGeom, bodyMat);
         this.mesh.add(body);
 
-        // Cockpit - Tinted Glass
+        // Cockpit - Darker, premium glazing
         const cockpitGeom = new THREE.BoxGeometry(0.4, 0.15, 0.4);
-        const cockpitMat = new THREE.MeshPhongMaterial({
-            color: 0x00f3ff,
+        const cockpitMat = new THREE.MeshStandardMaterial({
+            color: 0x111111, // Dark glazing
             transparent: true,
-            opacity: 0.6
+            opacity: 0.8,
+            metalness: 0.5,
+            roughness: 0.1
         });
         const cockpit = new THREE.Mesh(cockpitGeom, cockpitMat);
         cockpit.position.set(0, 0.2, 0.1);
         this.mesh.add(cockpit);
 
-        // Thrusters - 4 glowing cyan underside jets
+        // Thrusters - Cyan propulsion outlets
         const thrusterGeom = new THREE.BoxGeometry(0.1, 0.1, 0.2);
         const thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
 
@@ -130,8 +132,11 @@ export class Player {
         this.mesh.rotation.z = this.rotationZ;
 
         // Visual flair: Thruster flickering
+        // Since the car is always moving forward in an endless runner,
+        // we maintain a subtle, consistent cyan idle effect.
         this.thrusters.forEach(t => {
-            t.scale.set(1, 1, 1 + Math.random() * 0.5);
+            const scale = 1 + Math.random() * 0.2;
+            t.scale.set(1, 1, scale);
         });
     }
 
