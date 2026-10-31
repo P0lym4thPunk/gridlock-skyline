@@ -15,7 +15,6 @@ export class Environment {
         this.segments = [];
         this._initHighway();
         this._initCityscape();
-        this.infrastructure = this._createStreetInfrastructure();
         this.bridges = [];
     }
 
@@ -84,6 +83,9 @@ export class Environment {
                 segment.add(dash);
             }
         });
+
+        // Attach Street Infrastructure
+        this._createStreetInfrastructure(segment);
 
         segment.position.z = zPos;
         this.scene.add(segment);
@@ -155,7 +157,7 @@ export class Environment {
         for (let i = 0; i < buildingCount; i++) {
             const type = Math.random();
             let buildingGroup = new THREE.Group();
-            
+
             let w, h, d;
             if (type < 0.4) {
                 w = 8 + Math.random() * 6;
@@ -203,56 +205,52 @@ export class Environment {
         this.scene.add(this.buildings);
     }
 
-        _createStreetInfrastructure() {
-            const infraGroup = new THREE.Group();
-            const roadWidth = this.roadWidth;
-            const roadLength = this.roadLength;
+    _createStreetInfrastructure(segment) {
+        const roadWidth = this.roadWidth;
+        const roadLength = this.roadLength;
 
-            // Materials
-            const sidewalkMat = new THREE.MeshPhongMaterial({ color: 0x222225, shininess: 10 });
-            const lightStripMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-            const barrierMat = new THREE.MeshPhongMaterial({ color: 0x444444 });
+        // Materials
+        const sidewalkMat = new THREE.MeshPhongMaterial({ color: 0x222225, shininess: 10 });
+        const lightStripMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+        const barrierMat = new THREE.MeshPhongMaterial({ color: 0x444444 });
 
-            // 1. Sidewalks (Outer edges of the road)
-            const sidewalkWidth = 3;
-            const sidewalkGeom = new THREE.PlaneGeometry(sidewalkWidth, roadLength);
-                    const leftSidewalk = new THREE.Mesh(sidewalkGeom, sidewalkMat);
-            leftSidewalk.rotation.x = -Math.PI / 2;
-            leftSidewalk.position.set(-(roadWidth / 2 + sidewalkWidth / 2), 0.02, 0);
-            infraGroup.add(leftSidewalk);
+        // 1. Sidewalks (Outer edges of the road)
+        const sidewalkWidth = 3;
+        const sidewalkGeom = new THREE.PlaneGeometry(sidewalkWidth, roadLength);
+        const leftSidewalk = new THREE.Mesh(sidewalkGeom, sidewalkMat);
+        leftSidewalk.rotation.x = -Math.PI / 2;
+        leftSidewalk.position.set(-(roadWidth / 2 + sidewalkWidth / 2), 0.02, 0);
+        segment.add(leftSidewalk);
 
-            const rightSidewalk = new THREE.Mesh(sidewalkGeom, sidewalkMat);
-            rightSidewalk.rotation.x = -Math.PI / 2;
-            rightSidewalk.position.set((roadWidth / 2 + sidewalkWidth / 2), 0.02, 0);
-            infraGroup.add(rightSidewalk);
+        const rightSidewalk = new THREE.Mesh(sidewalkGeom, sidewalkMat);
+        rightSidewalk.rotation.x = -Math.PI / 2;
+        rightSidewalk.position.set((roadWidth / 2 + sidewalkWidth / 2), 0.02, 0);
+        segment.add(rightSidewalk);
 
-            // 2. Architectural Light Strips (Along the sidewalks)
-            const stripGeom = new THREE.PlaneGeometry(0.1, roadLength);
-            const leftStrip = new THREE.Mesh(stripGeom, lightStripMat);
-            leftStrip.rotation.x = -Math.PI / 2;
-            leftStrip.position.set(-(roadWidth / 2), 0.03, 0);
-            infraGroup.add(leftStrip);
+        // 2. Architectural Light Strips (Along the sidewalks)
+        const stripGeom = new THREE.PlaneGeometry(0.1, roadLength);
+        const leftStrip = new THREE.Mesh(stripGeom, lightStripMat);
+        leftStrip.rotation.x = -Math.PI / 2;
+        leftStrip.position.set(-(roadWidth / 2), 0.03, 0);
+        segment.add(leftStrip);
 
-            const rightStrip = new THREE.Mesh(stripGeom, lightStripMat);
-            rightStrip.rotation.x = -Math.PI / 2;
-            rightStrip.position.set((roadWidth / 2), 0.03, 0);
-            infraGroup.add(rightStrip);
+        const rightStrip = new THREE.Mesh(stripGeom, lightStripMat);
+        rightStrip.rotation.x = -Math.PI / 2;
+        rightStrip.position.set((roadWidth / 2), 0.03, 0);
+        segment.add(rightStrip);
 
-            // 3. Roadside Barriers/Bollards (Distributed along the edges)
-            const bollardGeom = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
-            for (let i = 0; i < 20; i++) {
-                const bL = new THREE.Mesh(bollardGeom, barrierMat);
-                bL.position.set(-(roadWidth / 2 + 0.2), 0.25, (i * 20) - 100);
-                infraGroup.add(bL);
+        // 3. Roadside Barriers/Bollards (Distributed along the edges)
+        const bollardGeom = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
+        for (let i = 0; i < 20; i++) {
+            const bL = new THREE.Mesh(bollardGeom, barrierMat);
+            bL.position.set(-(roadWidth / 2 + 0.2), 0.25, (i * 20) - 100);
+            segment.add(bL);
 
-                const bR = new THREE.Mesh(bollardGeom, barrierMat);
-                bR.position.set((roadWidth / 2 + 0.2), 0.25, (i * 20) - 100);
-                infraGroup.add(bR);
-            }
-
-            this.scene.add(infraGroup);
-            return infraGroup;
+            const bR = new THREE.Mesh(bollardGeom, barrierMat);
+            bR.position.set((roadWidth / 2 + 0.2), 0.25, (i * 20) - 100);
+            segment.add(bR);
         }
+    }
 
     _createWindowTexture() {
         const canvas = document.createElement('canvas');
@@ -267,7 +265,7 @@ export class Environment {
         // Draw a 4x4 grid of glowing windows
         const winSize = 8;
         const spacing = 16;
-        
+
         for (let x = 0; x < 4; x++) {
             for (let y = 0; y < 4; y++) {
                 // Randomly choose between cyan and gold for "Cyber-Gilded" look
@@ -275,9 +273,9 @@ export class Environment {
                 // Randomly skip some windows for variety
                 if (Math.random() > 0.2) {
                     ctx.fillRect(
-                        x * spacing + 4, 
-                        y * spacing + 4, 
-                        winSize, 
+                        x * spacing + 4,
+                        y * spacing + 4,
+                        winSize,
                         winSize
                     );
                 }
@@ -322,7 +320,7 @@ export class Environment {
 
         this.scene.add(bridge);
         this.bridges.push(bridge);
-}
+    }
     update(deltaTime, gameSpeed) {
         const effectiveSpeed = gameSpeed + 10;
         // 1. Scroll Road Segments
