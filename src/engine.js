@@ -36,14 +36,19 @@ export class Engine {
     }
 
     _initCamera() {
+        // Camera Rig: A group to separate base positioning from additive effects (tilt, shake)
+        this.cameraRig = new THREE.Group();
+        this.cameraRig.position.set(0, 3, 10);
+        this.scene.add(this.cameraRig);
+
         this.camera = new THREE.PerspectiveCamera(
             75,
             window.innerWidth / window.innerHeight,
             0.1,
             1000
         );
-        // Position camera slightly behind and above the origin
-        this.camera.position.set(0, 2, 5);
+        // Add camera to rig. Local position is 0,0,0 so it starts at rig position.
+        this.cameraRig.add(this.camera);
     }
 
     _initRenderer() {
@@ -81,8 +86,11 @@ export class Engine {
         const height = window.innerHeight;
 
         this.camera.aspect = width / height;
-        this.camera.updateProjectionMatrix();
+                // Responsive FOV: Increase FOV on narrow screens to ensure lane visibility
+        // Aspect ratio < 0.7 typically covers most portrait mobile devices.
+        this.camera.fov = (width / height < 0.7) ? 90 : 75;
 
+        this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
     }
 

@@ -84,6 +84,9 @@ export class Environment {
             }
         });
 
+        // Attach Street Infrastructure
+        this._createStreetInfrastructure(segment);
+
         segment.position.z = zPos;
         this.scene.add(segment);
         return segment;
@@ -100,44 +103,226 @@ export class Environment {
     _initCityscape() {
         this.buildings = new THREE.Group();
         const buildingCount = 80;
-        const chromeMat = new THREE.MeshPhongMaterial({
-            color: 0xffffff,
-            shininess: 100,
-            specular: 0xffeaad
-        });
 
-        for (let i = 0; i < buildingCount; i++) {
-            const w = 4 + Math.random() * 6;
-            const h = 20 + Math.random() * 60;
-            const d = 4 + Math.random() * 6;
+        // 1. Create shared window texture
+        const windowTexture = this._createWindowTexture();
+
+        // 2. Create a pool of materials for different size classes to avoid stretching
+        const materialPool = {};
+        const getMaterial = (w, h, isBackground = false) => {
+            const scaleKey = `${Math.round(w)}x${Math.round(h)}${isBackground ? '_bg' : ''}`;
+            if (!materialPool[scaleKey]) {
+                const tex = windowTexture.clone();
+                tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+                tex.repeat.set(w / 2, h / 2);
+
+                materialPool[scaleKey] = new THREE.MeshPhongMaterial({
+                    color: isBackground ? 0x08080a : 0x111115,
+                    emissive: isBackground ? 0x001a2a : 0x00f3ff,
+                    emissiveMap: tex,
+                    emissiveIntensity: isBackground ? 0.2 : 0.6,
+                    shininess: 100,
+                    specular: isBackground ? 0x111111 : 0x444444
+                });
+            }
+            return materialPool[scaleKey];
+        };
+
+        // Urban Block Configuration
+        const blocks = [
+            { minX: 15, maxX: 25 }, // Left Block 1
+            { minX: 30, maxX: 40 }, // Left Block 2
+            { minX: -25, maxX: -15 }, // Right Block 1
+            { minX: -40, maxX: -30 }, // Right Block 2
+        ];
+
+        // Background Layer: Distant, muted skyscrapers
+        const bgBuildingCount = 40;
+        for (let i = 0; i < bgBuildingCount; i++) {
+            const w = 10 + Math.random() * 15;
+            const h = 80 + Math.random() * 120;
+            const d = 10 + Math.random() * 15;
             const geom = new THREE.BoxGeometry(w, h, d);
-            const b = new THREE.Mesh(geom, chromeMat);
+            const b = new THREE.Mesh(geom, getMaterial(w, h, true));
             const side = Math.random() > 0.5 ? 1 : -1;
             b.position.set(
-                (15 + Math.random() * 20) * side,
+                (50 + Math.random() * 50) * side,
                 h / 2,
-                -Math.random() * 400
+                -Math.random() * 600
             );
             this.buildings.add(b);
+        }
+
+        // Foreground/Midground Layer
+        for (let i = 0; i < buildingCount; i++) {
+            const type = Math.random();
+            let buildingGroup = new THREE.Group();
+
+            let w, h, d;
+            if (type < 0.4) {
+                w = 8 + Math.random() * 6;
+                h = 20 + Math.random() * 20;
+                d = 8 + Math.random() * 6;
+                const geom = new THREE.BoxGeometry(w, h, d);
+                const b = new THREE.Mesh(geom, getMaterial(w, h));
+                b.position.y = h / 2;
+                buildingGroup.add(b);
+            } else if (type < 0.8) {
+                w = 4 + Math.random() * 4;
+                h = 50 + Math.random() * 50;
+                d = 4 + Math.random() * 4;
+                const geom = new THREE.BoxGeometry(w, h, d);
+                const b = new THREE.Mesh(geom, getMaterial(w, h));
+                b.position.y = h / 2;
+                buildingGroup.add(b);
+            } else {
+                const baseW = 8 + Math.random() * 4;
+                const baseH = 20 + Math.random() * 20;
+                const baseD = 8 + Math.random() * 4;
+                const geom1 = new THREE.BoxGeometry(baseW, baseH, baseD);
+                const b1 = new THREE.Mesh(geom1, getMaterial(baseW, baseH));
+                b1.position.y = baseH / 2;
+                buildingGroup.add(b1);
+
+                const topW = baseW * 0.6;
+                const topH = 10 + Math.random() * 20;
+                const topD = baseD * 0.6;
+                const geom2 = new THREE.BoxGeometry(topW, topH, topD);
+                const b2 = new THREE.Mesh(geom2, getMaterial(topW, topH));
+                b2.position.y = baseH + topH / 2;
+                buildingGroup.add(b2);
+            }
+
+            const block = blocks[Math.floor(Math.random() * blocks.length)];
+            const posX = block.minX + Math.random() * (block.maxX - block.minX);
+            buildingGroup.position.set(
+                posX,
+                0,
+                -Math.random() * 400
+            );
+            this.buildings.add(buildingGroup);
         }
         this.scene.add(this.buildings);
     }
 
+    _createStreetInfrastructure(segment) {
+        const roadWidth = this.roadWidth;
+        const roadLength = this.roadLength;
+
+        // Materials
+        const sidewalkMat = new THREE.MeshPhongMaterial({ color: 0x222225, shininess: 10 });
+        const lightStripMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+        const barrierMat = new THREE.MeshPhongMaterial({ color: 0x444444 });
+
+        // 1. Sidewalks (Outer edges of the road)
+        const sidewalkWidth = 3;
+        const sidewalkGeom = new THREE.PlaneGeometry(sidewalkWidth, roadLength);
+        const leftSidewalk = new THREE.Mesh(sidewalkGeom, sidewalkMat);
+        leftSidewalk.rotation.x = -Math.PI / 2;
+        leftSidewalk.position.set(-(roadWidth / 2 + sidewalkWidth / 2), 0.02, 0);
+        segment.add(leftSidewalk);
+
+        const rightSidewalk = new THREE.Mesh(sidewalkGeom, sidewalkMat);
+        rightSidewalk.rotation.x = -Math.PI / 2;
+        rightSidewalk.position.set((roadWidth / 2 + sidewalkWidth / 2), 0.02, 0);
+        segment.add(rightSidewalk);
+
+        // 2. Architectural Light Strips (Along the sidewalks)
+        const stripGeom = new THREE.PlaneGeometry(0.1, roadLength);
+        const leftStrip = new THREE.Mesh(stripGeom, lightStripMat);
+        leftStrip.rotation.x = -Math.PI / 2;
+        leftStrip.position.set(-(roadWidth / 2), 0.03, 0);
+        segment.add(leftStrip);
+
+        const rightStrip = new THREE.Mesh(stripGeom, lightStripMat);
+        rightStrip.rotation.x = -Math.PI / 2;
+        rightStrip.position.set((roadWidth / 2), 0.03, 0);
+        segment.add(rightStrip);
+
+        // 3. Roadside Barriers/Bollards (Distributed along the edges)
+        const bollardGeom = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
+        for (let i = 0; i < 20; i++) {
+            const bL = new THREE.Mesh(bollardGeom, barrierMat);
+            bL.position.set(-(roadWidth / 2 + 0.2), 0.25, (i * 20) - 100);
+            segment.add(bL);
+
+            const bR = new THREE.Mesh(bollardGeom, barrierMat);
+            bR.position.set((roadWidth / 2 + 0.2), 0.25, (i * 20) - 100);
+            segment.add(bR);
+        }
+    }
+
+    _createWindowTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+
+        // Dark background
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 64, 64);
+
+        // Draw a 4x4 grid of glowing windows
+        const winSize = 8;
+        const spacing = 16;
+
+        for (let x = 0; x < 4; x++) {
+            for (let y = 0; y < 4; y++) {
+                // Randomly choose between cyan and gold for "Cyber-Gilded" look
+                ctx.fillStyle = Math.random() > 0.3 ? '#00f3ff' : '#ffd866';
+                // Randomly skip some windows for variety
+                if (Math.random() > 0.2) {
+                    ctx.fillRect(
+                        x * spacing + 4,
+                        y * spacing + 4,
+                        winSize,
+                        winSize
+                    );
+                }
+            }
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        return texture;
+    }
+
     _createBridge(zPos) {
-        const bridgeWidth = 20;
-        const bridgeHeight = 2;
-        const bridgeDepth = 2;
-        const geom = new THREE.BoxGeometry(bridgeWidth, bridgeHeight, bridgeDepth);
-        const mat = new THREE.MeshPhongMaterial({ color: 0xcccccc, shininess: 80 });
+        // 5.5 Variation and Sequencing
+        // To avoid repetitive sequences, we use a weighted random distribution
+        // and ensure we don't just repeat the same height indefinitely.
+        const category = Math.random();
+        let height, width, depth, color;
+
+        if (category < 0.3) {
+            // LOW-LEVEL: Close to road, low clearance
+            height = 1.5;
+            // 5.4 Anchoring: Span from inner block edge to inner block edge (approx -15 to 15)
+            width = 30;
+            depth = 2 + Math.random() * 1;            color = 0xaaaaaa;
+        } else if (category < 0.7) {
+            // MID-LEVEL: Intermediate elevation
+            height = 6;
+            width = 32 + Math.random() * 4;
+            depth = 2.5 + Math.random() * 1;
+            color = 0xbbbbbb;        } else {            // HIGH-LEVEL: High elevation, strong architectural scale
+            height = 15;
+            width = 35 + Math.random() * 5;
+            depth = 3 + Math.random() * 2;
+            color = 0xcccccc;
+        }
+        const geom = new THREE.BoxGeometry(width, height, depth);
+        const mat = new THREE.MeshPhongMaterial({ color: color, shininess: 80 });
         const bridge = new THREE.Mesh(geom, mat);
-        bridge.position.set(0, 4 + Math.random() * 2, zPos);
+
+        // 5.4 Anchoring: Center the bridge at X=0.
+        // With width >= 30, the bridge endpoints now align with the inner edges of the urban blocks.
+        bridge.position.set(0, height / 2, zPos);
+
         this.scene.add(bridge);
         this.bridges.push(bridge);
     }
-
     update(deltaTime, gameSpeed) {
         const effectiveSpeed = gameSpeed + 10;
-
         // 1. Scroll Road Segments
         this.segments.forEach(seg => {
             seg.position.z += effectiveSpeed * deltaTime;
